@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">InstagramLike</string>
+    <string name="sampleheadertext">Your Feed <b>. Popular</b></string>
     <string name="thumbnaildescription">This is the widget that load the video thumbnail</string>
+    <string name="sampletext">This is sample caption for a post on this platform. it\'s something that you can see. Here
+        is where it stops …</string>
 </resources>

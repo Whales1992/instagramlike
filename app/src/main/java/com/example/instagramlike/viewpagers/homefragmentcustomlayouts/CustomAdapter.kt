@@ -15,6 +15,7 @@ class CustomAdapter(fm: FragmentManager?, NumOfTabs: Int, private var data: Arra
         return ret
     }
 
+
     override fun getCount(): Int {
         return mNumOfTabs
     }

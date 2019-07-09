@@ -4,6 +4,7 @@ import android.os.AsyncTask
 import android.os.Bundle
 import android.support.constraint.ConstraintLayout
 import android.support.v4.app.Fragment
+import android.support.v4.view.ViewPager
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -50,6 +51,26 @@ class HomeFragment : Fragment(), FetchVideoState {
         this.l!!.viewpagerr.setPageTransformer(true, this.l!!.viewpagerr.PageTransformer())
 
         this.l!!.viewpagerr.setCurrentItem(0, true)
+
+        this.l!!.viewpagerr.offscreenPageLimit = 1
+
+        this.l!!.viewpagerr.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+
+            override fun onPageScrollStateChanged(state: Int) {
+                Log.e("SCROLLED", ""+state)
+            }
+
+            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+            }
+
+            override fun onPageSelected(position: Int) {
+                Log.e("SCROLLED", ""+position)
+            }
+
+        })
+
+
+
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
