@@ -1,85 +1,84 @@
 package com.example.instagramlike.fragments
 
-import android.os.AsyncTask
+import android.app.AlertDialog
+import android.content.Context
+import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.support.constraint.ConstraintLayout
 import android.support.v4.app.Fragment
-import android.support.v4.view.ViewPager
+import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import com.example.instagramlike.R
+import com.example.instagramlike.adapters.VideoViewAdapter
 import com.example.instagramlike.network.Apicalls
 import com.example.instagramlike.network.ResponseCallback
 import com.example.instagramlike.network.models.SingleVideo
-import com.example.instagramlike.network.models.VideoModel
-import com.example.instagramlike.viewpagers.homefragmentcustomlayouts.CustomAdapter
-import com.example.instagramlike.viewpagers.homefragmentcustomlayouts.FetchVideoState
-import kotlinx.android.synthetic.main.home_fragment.view.*
+import com.example.instagramlike.viewpagers.DataStates
 import org.json.JSONArray
 import org.json.JSONException
+import java.lang.Exception
 import com.google.gson.reflect.TypeToken as TypeToken1
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.PagerSnapHelper
+import android.widget.*
 
-class HomeFragment : Fragment(), FetchVideoState {
-    internal var adapter : CustomAdapter? = null
-    internal var downloadedLinks : ArrayList<VideoModel>? = null
-    internal var videosLink : ArrayList<String>? = null
 
-    internal val resultInterface : FetchVideoState ? = this
-    internal var l : ConstraintLayout? = null
+class HomeFragment : Fragment(), DataStates {
 
-    companion object {
-        fun newInstance() = HomeFragment()
-    }
+    private var adapter : VideoViewAdapter? = null
+    private var recyclerview : RecyclerView? = null
+    private  var uri: Uri? = null
+
+    private lateinit var meadiaController: MediaController
+    private var videoview: VideoView? =null
+
+    val videosList = ArrayList<SingleVideo>()
+
+    internal val resultInterface : DataStates? = this
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?): View {
         val l = inflater.inflate(R.layout.home_fragment, container, false) as ConstraintLayout
-        this.l = l
+        activity!!.window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS) //To make fragment full screen
+        activity!!.window.clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)//To make fragment full screen on runtime in the case it resets
 //        getLocallyCachedVideos(l)
 
-        val getVideosSilently = GetVideosSilently()
-        getVideosSilently.execute(resultInterface)
+        findViewsByIds(l)
+        setAdapter(videosList)
+
+//        val getVideosSilently = GetVideosInTheBackGround()
+//        getVideosSilently.execute(resultInterface)
 
         return l
     }
 
-    private fun initViewPager(videosLink: ArrayList<SingleVideo>) {
-        this.l!!.viewpagerr.adapter = CustomAdapter(fragmentManager, videosLink.size, videosLink)
+    override fun onPause() {
+        super.onPause()
 
-        this.l!!.viewpagerr.setPageTransformer(true, this.l!!.viewpagerr.PageTransformer())
-
-        this.l!!.viewpagerr.setCurrentItem(0, true)
-
-        this.l!!.viewpagerr.offscreenPageLimit = 1
-
-        this.l!!.viewpagerr.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
-
-            override fun onPageScrollStateChanged(state: Int) {
-                Log.e("SCROLLED", ""+state)
-            }
-
-            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
-            }
-
-            override fun onPageSelected(position: Int) {
-                Log.e("SCROLLED", ""+position)
-            }
-
-        })
-
-
-
+        if(videoview!=null)
+            videoview!!.stopPlayback()
+    }
+//
+    override fun onStop() {
+        super.onStop()
+        if(videoview!=null)
+            videoview!!.stopPlayback()
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    private fun findViewsByIds(l: ConstraintLayout) {
+        recyclerview = l.findViewById(R.id.recyclerview)
     }
 
-    override fun finishFetchingVideos(result: String) {
+    override fun finishFetchingFeedFromServer(result: String) {
         val video= SingleVideo
-        val videosList = ArrayList<SingleVideo>()
+        videosList.clear()
 
         try{
             val json = JSONArray(result)
@@ -88,32 +87,120 @@ class HomeFragment : Fragment(), FetchVideoState {
                 videosList.add(video.objectFromData(item.toString()))
             }
 
-            initViewPager(videosList)
+            adapter!!.notifyDataSetChanged()
         }catch (jx : JSONException){
             Log.e("EXCEPTION", jx.message+"")
         }
     }
 
-    internal class GetVideosSilently : AsyncTask<FetchVideoState, String, String>(){
+    private fun setAdapter(videosList: ArrayList<SingleVideo>) {
+        adapter = VideoViewAdapter(videosList, this)
+        recyclerview!!.setAdapter(adapter)
+        val layoutmanager = LinearLayoutManager(context!!)
+        layoutmanager.orientation = LinearLayoutManager.VERTICAL
+        recyclerview!!.layoutManager = layoutmanager
 
-        override fun doInBackground(vararg params: FetchVideoState?): String? {
+        adapter!!.notifyDataSetChanged()
 
+        //Simply uncomment to see beautiful Indicator Decoration ;) Wale say so ...
+//        recyclerview!!.addItemDecoration(LinePagerIndicatorDecoration())
+
+        // This is the whole magic that makes recyclerview act like a view pager
+        val snapHelper = PagerSnapHelper()
+        snapHelper.attachToRecyclerView(recyclerview)
+
+        fetchDataFromServer()
+    }
+
+    private fun fetchDataFromServer(){
+        try{
             val apiCalls = Apicalls(60, 60, 60)
             apiCalls.getVideos(object : ResponseCallback {
 
                 override fun onSuccess(res: String?): String? {
                     if(res!=null)
-                        params.get(0)!!.finishFetchingVideos(res)
+                        resultInterface!!.finishFetchingFeedFromServer(res)
                     return null
                 }
 
                 override fun onFailure(res: String?): String? {
                     return null
                 }
-
             })
 
-            return null
+        }catch (ex : Exception){
+            Log.e("Exception", ""+ex.message);
         }
     }
+
+    override fun loadVideo(
+        result: SingleVideo,
+        videoview: VideoView?,
+        thumb: ImageView?,
+        loading: ProgressBar?,
+        media_controller: FrameLayout?
+    ) {
+        try{
+            val handler = Handler(Looper.getMainLooper())
+            handler.postDelayed({
+                this.videoview = videoview
+
+                if(result.media_url!=null){
+                    meadiaController = MediaController(context)
+                    meadiaController.background = resources.getDrawable(R.color.transparent)
+
+                    val uri = Uri.parse(result.media_url)
+                    this.videoview!!.setVideoURI(uri)
+
+                    this.videoview!!.setOnPreparedListener{
+                        this.videoview!!.setMediaController(meadiaController)
+                        meadiaController.setAnchorView(media_controller)
+                        this.videoview!!.seekTo(1000)
+                        this.videoview!!.start()
+
+                        this.videoview!!.visibility = View.VISIBLE
+                        this.videoview!!.setZOrderOnTop(true)
+                        thumb!!.visibility = View.GONE
+                    }
+
+                    this.videoview!!.setOnInfoListener{player, what, extra ->
+                        if(what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START){
+                            thumb!!.visibility = View.GONE
+                            loading!!.visibility = View.GONE
+                        }
+
+                        if(what == MediaPlayer.MEDIA_INFO_BUFFERING_START){
+                            loading!!.visibility = View.VISIBLE
+                        }
+
+                        if(what == MediaPlayer.MEDIA_INFO_BUFFERING_END){
+                            loading!!.visibility = View.GONE
+                        }
+                        true
+                    }
+                }else{
+                    showMessage("Opps!!!,This video is unavailable for now ...", context!!)
+                }
+            }, 1000)
+        }catch (ex :Exception){
+            Log.e("EXCEPTION", ""+ex.message)
+        }
+    }
+
+    private fun showMessage(msg : String, context : Context){
+        try{
+            val handler = Handler(Looper.getMainLooper())
+            handler.post {
+                AlertDialog.Builder(context)
+                    .setTitle("Error")
+                    .setMessage(msg)
+                    .setCancelable(false)
+                    .setPositiveButton(android.R.string.ok) { dialog, which -> dialog.dismiss() }
+                    .show()
+            }
+        }catch (ex : Exception){
+            Log.e("EXCEPTION", ""+ex.message)
+        }
+    }
+
 }

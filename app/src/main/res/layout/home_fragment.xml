@@ -8,8 +8,8 @@
         android:background="@color/transparent"
         tools:context=".fragments.HomeFragment">
 
-    <com.example.instagramlike.viewpagers.homefragmentcustomlayouts.VerticalViewPager
-            android:id="@+id/viewpagerr"
+    <android.support.v7.widget.RecyclerView
+            android:id="@+id/recyclerview"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@color/grey"

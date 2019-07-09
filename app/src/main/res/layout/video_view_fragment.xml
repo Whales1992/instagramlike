@@ -2,25 +2,30 @@
 <android.support.constraint.ConstraintLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/transparent"
-        tools:context=".viewpagers.homefragmentcustomlayouts.VideoViewFragment">
+        android:background="@color/transparent">
 
-    <VideoView
-        android:id="@+id/videoview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/grey"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+    <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+        <VideoView
+                android:id="@+id/videoview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_vertical"
+                android:background="@color/grey"/>
+
+    </FrameLayout>
 
     <ImageView
         android:contentDescription="@string/thumbnaildescription"
-        android:id="@+id/thumbnail_holder"
+        android:id="@+id/thumb"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/grey"
@@ -34,7 +39,6 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:indeterminate="true"
-        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -48,14 +52,12 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent">
-
-    </FrameLayout>
+            app:layout_constraintStart_toStartOf="parent"/>
 
     <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="100dp"
+            android:layout_marginBottom="70dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent">
@@ -67,7 +69,7 @@
                 android:layout_height="match_parent">
 
             <TextView
-                    android:id="@+id/tager"
+                    android:id="@+id/tagger"
                     android:textColor="@color/white"
                     android:paddingEnd="50dp"
                     android:paddingRight="50dp"
