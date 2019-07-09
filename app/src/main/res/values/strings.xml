@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">InstagramLike</string>
+    <string name="thumbnaildescription">This is the widget that load the video thumbnail</string>
+</resources>
