@@ -24,7 +24,7 @@ public class VideoViewAdapter (private val list: ArrayList<SingleVideo>, private
 
         override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
             val singleVideo : SingleVideo = list[position]
-            holder.bind(singleVideo, dataStatesInterface)
+            holder.bind(singleVideo, dataStatesInterface, position)
         }
 
         override fun getItemCount(): Int = list.size
@@ -43,6 +43,7 @@ public class VideoViewAdapter (private val list: ArrayList<SingleVideo>, private
         private var comment_text: TextView? = null
         private var share_text: TextView? = null
         private var media_controller: FrameLayout? = null
+        private var content_container: FrameLayout? = null
 
         init {
             loading = itemView.findViewById(R.id.loading)
@@ -55,9 +56,14 @@ public class VideoViewAdapter (private val list: ArrayList<SingleVideo>, private
             comment_text = itemView.findViewById(R.id.comment_text)
             share_text = itemView.findViewById(R.id.share_text)
             media_controller = itemView.findViewById(R.id.media_controller)
+            content_container = itemView.findViewById(R.id.content_container)
         }
 
-        fun bind(singleVideo : SingleVideo, dataStatesInterface : DataStates) {
+        fun bind(
+            singleVideo: SingleVideo,
+            dataStatesInterface: DataStates,
+            position: Int
+        ) {
             like_text!!.text = ""+singleVideo.like_count
             comment_text!!.text = ""+singleVideo.comment_count
             share_text!!.text = ""+singleVideo.post_shares_count
@@ -68,7 +74,7 @@ public class VideoViewAdapter (private val list: ArrayList<SingleVideo>, private
             loadVideosThumbNails(thumb, singleVideo.thumbnail_url)
             loadTaggerThumbNails(tagger_img, singleVideo.user_info!!.avatar)
 
-            dataStatesInterface.loadVideo(singleVideo, videoview, thumb, loading, media_controller)
+            dataStatesInterface.loadVideo(singleVideo, videoview, thumb, loading, media_controller, position)
         }
 
         private fun loadTaggerThumbNails(tagger_img: ImageView?, avatar: String?) {

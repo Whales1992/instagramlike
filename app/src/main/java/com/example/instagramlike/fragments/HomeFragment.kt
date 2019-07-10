@@ -29,7 +29,6 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.PagerSnapHelper
 import android.widget.*
 
-
 class HomeFragment : Fragment(), DataStates {
 
     private var adapter : VideoViewAdapter? = null
@@ -59,13 +58,19 @@ class HomeFragment : Fragment(), DataStates {
         return l
     }
 
+    override fun onDetach() {
+        super.onDetach()
+        if(videoview!=null)
+            videoview!!.stopPlayback()
+    }
+
     override fun onPause() {
         super.onPause()
 
         if(videoview!=null)
             videoview!!.stopPlayback()
     }
-//
+
     override fun onStop() {
         super.onStop()
         if(videoview!=null)
@@ -102,7 +107,7 @@ class HomeFragment : Fragment(), DataStates {
 
         adapter!!.notifyDataSetChanged()
 
-        //Simply uncomment to see beautiful Indicator Decoration ;) Wale say so ...
+        //Simply uncomment to see beautiful Indicator Decoration ;)
 //        recyclerview!!.addItemDecoration(LinePagerIndicatorDecoration())
 
         // This is the whole magic that makes recyclerview act like a view pager
@@ -138,7 +143,8 @@ class HomeFragment : Fragment(), DataStates {
         videoview: VideoView?,
         thumb: ImageView?,
         loading: ProgressBar?,
-        media_controller: FrameLayout?
+        media_controller: FrameLayout?,
+        position: Int
     ) {
         try{
             val handler = Handler(Looper.getMainLooper())
@@ -147,9 +153,8 @@ class HomeFragment : Fragment(), DataStates {
 
                 if(result.media_url!=null){
                     meadiaController = MediaController(context)
-                    meadiaController.background = resources.getDrawable(R.color.transparent)
 
-                    val uri = Uri.parse(result.media_url)
+                    uri = Uri.parse(result.media_url)
                     this.videoview!!.setVideoURI(uri)
 
                     this.videoview!!.setOnPreparedListener{
@@ -158,9 +163,15 @@ class HomeFragment : Fragment(), DataStates {
                         this.videoview!!.seekTo(1000)
                         this.videoview!!.start()
 
+                        thumb!!.visibility = View.GONE
+                        loading!!.visibility = View.GONE
                         this.videoview!!.visibility = View.VISIBLE
                         this.videoview!!.setZOrderOnTop(true)
-                        thumb!!.visibility = View.GONE
+                    }
+
+                    this.videoview!!.setOnCompletionListener {
+                        if(videosList.size-1 > position)
+                            recyclerview!!.scrollToPosition(position)
                     }
 
                     this.videoview!!.setOnInfoListener{player, what, extra ->
@@ -176,12 +187,16 @@ class HomeFragment : Fragment(), DataStates {
                         if(what == MediaPlayer.MEDIA_INFO_BUFFERING_END){
                             loading!!.visibility = View.GONE
                         }
+
+                        if(what == MediaPlayer.MEDIA_INFO_VIDEO_NOT_PLAYING){
+                            loading!!.visibility = View.VISIBLE
+                        }
                         true
                     }
                 }else{
                     showMessage("Opps!!!,This video is unavailable for now ...", context!!)
                 }
-            }, 1000)
+            }, 500)
         }catch (ex :Exception){
             Log.e("EXCEPTION", ""+ex.message)
         }
