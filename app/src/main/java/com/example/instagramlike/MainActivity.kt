@@ -2,11 +2,20 @@ package com.example.instagramlike
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v4.view.ViewPager
+import android.util.Log
+import com.example.instagramlike.viewpagers.CustomViewPager
 import com.example.instagramlike.viewpagers.MainActivityViewPagerAdapter
+import com.example.instagramlike.viewpagers.PageStates
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.home_fragment.view.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), PageStates{
+    override fun pageStateChange(position: Int) {
+        Log.e("BB", "..."+position)
+    }
+
+    private val pagestateInteface = this
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +59,20 @@ class MainActivity : AppCompatActivity() {
 
         viewpager.adapter = MainActivityViewPagerAdapter(supportFragmentManager, 5, bundle)
         viewpager.setOffscreenPageLimit(5)
+        viewpager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+
+            override fun onPageScrollStateChanged(state: Int) {
+            }
+
+            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+
+            }
+            override fun onPageSelected(position: Int) {
+                pagestateInteface.pageStateChange(position)
+            }
+
+        })
+
     }
 
 }

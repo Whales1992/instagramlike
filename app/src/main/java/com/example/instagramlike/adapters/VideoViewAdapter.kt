@@ -35,6 +35,8 @@ public class VideoViewAdapter (private val list: ArrayList<SingleVideo>, private
 
         private var loading : ProgressBar? = null
         private var videoview: VideoView? = null
+        private var play_btn: ImageView? = null
+        private var pause_btn: ImageView? = null
         private var thumb: ImageView? = null
         private var tagger_img: ImageView? = null
         private var tagger: TextView? = null
@@ -48,6 +50,8 @@ public class VideoViewAdapter (private val list: ArrayList<SingleVideo>, private
         init {
             loading = itemView.findViewById(R.id.loading)
             videoview = itemView.findViewById(R.id.videoview)
+            play_btn = itemView.findViewById(R.id.play_btn)
+            pause_btn = itemView.findViewById(R.id.pause_btn)
             thumb = itemView.findViewById(R.id.thumb)
             tagger = itemView.findViewById(R.id.tagger)
             tagger_img = itemView.findViewById(R.id.tagger_img)
@@ -74,7 +78,7 @@ public class VideoViewAdapter (private val list: ArrayList<SingleVideo>, private
             loadVideosThumbNails(thumb, singleVideo.thumbnail_url)
             loadTaggerThumbNails(tagger_img, singleVideo.user_info!!.avatar)
 
-            dataStatesInterface.loadVideo(singleVideo, videoview, thumb, loading, media_controller, position)
+            dataStatesInterface.loadVideo(singleVideo, videoview, thumb, loading, play_btn, pause_btn, position)
         }
 
         private fun loadTaggerThumbNails(tagger_img: ImageView?, avatar: String?) {

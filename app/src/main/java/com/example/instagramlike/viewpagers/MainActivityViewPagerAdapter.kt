@@ -12,6 +12,7 @@ class MainActivityViewPagerAdapter(fm: FragmentManager, NumOfTabs: Int, bundle: 
     internal var fragmentManagement: FragmentManager = fm
 
     override fun getItem(position: Int): Fragment? {
+        fragmentBundle.putInt("position", position)
 
         when (position) {
             0 -> {

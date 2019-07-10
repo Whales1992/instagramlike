@@ -11,10 +11,6 @@ import android.support.constraint.ConstraintLayout
 import android.support.v4.app.Fragment
 import android.support.v7.widget.RecyclerView
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.view.WindowManager
 import com.example.instagramlike.R
 import com.example.instagramlike.adapters.VideoViewAdapter
 import com.example.instagramlike.network.Apicalls
@@ -27,9 +23,17 @@ import java.lang.Exception
 import com.google.gson.reflect.TypeToken as TypeToken1
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.PagerSnapHelper
+import android.view.*
+import android.view.View.GONE
+import android.view.View.VISIBLE
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.AlphaAnimation
+import android.view.animation.AnimationSet
+import android.view.animation.DecelerateInterpolator
 import android.widget.*
+import com.example.instagramlike.viewpagers.PageStates
 
-class HomeFragment : Fragment(), DataStates {
+class HomeFragment : Fragment(), DataStates, PageStates {
 
     private var adapter : VideoViewAdapter? = null
     private var recyclerview : RecyclerView? = null
@@ -37,10 +41,13 @@ class HomeFragment : Fragment(), DataStates {
 
     private lateinit var meadiaController: MediaController
     private var videoview: VideoView? =null
+    private var position: Int? = null
 
     val videosList = ArrayList<SingleVideo>()
 
     internal val resultInterface : DataStates? = this
+    var args : Bundle ? = null
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?): View {
@@ -48,6 +55,13 @@ class HomeFragment : Fragment(), DataStates {
         activity!!.window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS) //To make fragment full screen
         activity!!.window.clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)//To make fragment full screen on runtime in the case it resets
 //        getLocallyCachedVideos(l)
+
+        if(savedInstanceState!=null){
+            args = savedInstanceState.getBundle("key")
+            if(args != null){
+                position = args!!.getInt("position")
+            }
+        }
 
         findViewsByIds(l)
         setAdapter(videosList)
@@ -58,8 +72,22 @@ class HomeFragment : Fragment(), DataStates {
         return l
     }
 
+    override fun pageStateChange(position: Int) {
+        Log.e("AA", "..."+position)
+
+        if(this.position!! != position)
+            if(videoview!=null)
+                videoview!!.stopPlayback()
+    }
+
     override fun onDetach() {
         super.onDetach()
+        if(videoview!=null)
+            videoview!!.stopPlayback()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
         if(videoview!=null)
             videoview!!.stopPlayback()
     }
@@ -143,63 +171,115 @@ class HomeFragment : Fragment(), DataStates {
         videoview: VideoView?,
         thumb: ImageView?,
         loading: ProgressBar?,
-        media_controller: FrameLayout?,
+        play_btn: ImageView?,
+        pause_btn: ImageView?,
         position: Int
     ) {
         try{
+            this.videoview = videoview
+
             val handler = Handler(Looper.getMainLooper())
             handler.postDelayed({
-                this.videoview = videoview
 
                 if(result.media_url!=null){
-                    meadiaController = MediaController(context)
+                    loading!!.visibility = VISIBLE
+                    thumb!!.visibility = VISIBLE
 
                     uri = Uri.parse(result.media_url)
-                    this.videoview!!.setVideoURI(uri)
+                    videoview!!.setVideoURI(uri)
 
-                    this.videoview!!.setOnPreparedListener{
-                        this.videoview!!.setMediaController(meadiaController)
-                        meadiaController.setAnchorView(media_controller)
-                        this.videoview!!.seekTo(1000)
-                        this.videoview!!.start()
+                    videoview.setOnPreparedListener{
+                        videoview.seekTo(1000)
+                        videoview.start()
 
-                        thumb!!.visibility = View.GONE
-                        loading!!.visibility = View.GONE
-                        this.videoview!!.visibility = View.VISIBLE
-                        this.videoview!!.setZOrderOnTop(true)
+                        thumb.visibility = GONE
+                        loading.visibility = GONE
+                        videoview.visibility = VISIBLE
                     }
 
-                    this.videoview!!.setOnCompletionListener {
+                    videoview.setOnCompletionListener {l ->
+                        l.seekTo(1000)
+
                         if(videosList.size-1 > position)
-                            recyclerview!!.scrollToPosition(position)
+                            this.recyclerview!!.scrollToPosition(position+1)
+                            this.recyclerview!!.animate()
                     }
 
-                    this.videoview!!.setOnInfoListener{player, what, extra ->
+                    videoview.setOnInfoListener{player, what, extra ->
                         if(what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START){
-                            thumb!!.visibility = View.GONE
-                            loading!!.visibility = View.GONE
+                            thumb.visibility = GONE
+                            loading.visibility = GONE
                         }
 
                         if(what == MediaPlayer.MEDIA_INFO_BUFFERING_START){
-                            loading!!.visibility = View.VISIBLE
+                            loading.visibility = VISIBLE
                         }
 
                         if(what == MediaPlayer.MEDIA_INFO_BUFFERING_END){
-                            loading!!.visibility = View.GONE
+                            loading.visibility = GONE
                         }
 
                         if(what == MediaPlayer.MEDIA_INFO_VIDEO_NOT_PLAYING){
-                            loading!!.visibility = View.VISIBLE
+                            loading.visibility = VISIBLE
                         }
                         true
                     }
+
+
+//                    val fadeIn = AlphaAnimation(0f, 1f)
+//                    fadeIn.interpolator = DecelerateInterpolator() //add this
+//                    fadeIn.duration = 1000
+//
+//                    val fadeOut = AlphaAnimation(1f, 0f)
+//                    fadeOut.interpolator = AccelerateInterpolator() //and this
+//                    fadeOut.startOffset = 1000
+//                    fadeOut.duration = 2000
+//
+//                    val animation = AnimationSet(false) //change to false
+//                    animation.addAnimation(fadeIn)
+//                    animation.addAnimation(fadeOut)
+
+//                    videoview.setOnTouchListener(View.OnTouchListener { v, event ->
+//                        if(event.action==MotionEvent.ACTION_UP){
+//                            if(videoview.isPlaying){
+//                                videoview.pause()
+//                                showPlayBtn(play_btn!!, pause_btn!!)
+//
+//                                val handler = Handler(Looper.getMainLooper())
+//                                handler.postDelayed({
+//                                    play_btn.animation = fadeOut
+//                                }, 1000)
+//                            }else{
+//                                videoview.resume()
+//                                showPauseBtn(play_btn!!, pause_btn!!)
+//
+//                                val handler = Handler(Looper.getMainLooper())
+//                                handler.postDelayed({
+//                                    pause_btn.animation = fadeOut
+//                                }, 1000)
+//                            }
+//                        }
+//
+//                        v?.onTouchEvent(event) ?: true
+//                    })
                 }else{
                     showMessage("Opps!!!,This video is unavailable for now ...", context!!)
                 }
-            }, 500)
+            }, 100)
         }catch (ex :Exception){
+            showMessage("Opps!!!, Something when wrong ...", context!!)
             Log.e("EXCEPTION", ""+ex.message)
         }
+    }
+
+    private fun showPlayBtn(play : ImageView, pause : ImageView){
+        play.visibility = VISIBLE
+        pause.visibility = GONE
+    }
+
+    private fun showPauseBtn(play : ImageView, pause : ImageView){
+        play.visibility = GONE
+        pause.visibility = VISIBLE
     }
 
     private fun showMessage(msg : String, context : Context){

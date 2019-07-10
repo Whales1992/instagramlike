@@ -13,7 +13,8 @@ public interface DataStates {
         videoview: VideoView?,
         thumb: ImageView?,
         loading: ProgressBar?,
-        media_controller: FrameLayout?,
+        play_btn: ImageView?,
+        pause_btn: ImageView?,
         position: Int
     )
 }
